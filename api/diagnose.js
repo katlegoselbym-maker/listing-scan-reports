@@ -4,6 +4,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    const rawBody = Buffer.concat(chunks).toString("utf-8");
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -11,7 +17,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
         "content-type": "application/json",
       },
-      body: JSON.stringify(req.body),
+      body: rawBody,
     });
 
     const data = await response.json();
@@ -19,4 +25,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: "Server error", detail: error.message });
   }
-}
+      }
